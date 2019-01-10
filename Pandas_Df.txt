@@ -1,0 +1,1621 @@
+Dataframes Pandas Python
+
+1a. Importing data in python
+import csv
+f=open('C:\\Users\\Juhi.Agarwal\\Python\\AnalyticsVidhya\\train_u6lujuX_CVtuZ9i.csv','r+')
+
+readFile=csv.reader(f)
+for jt in readFile:
+    print(jt[1])
+    
+	
+1b. writing in a CSV
+path='C:\\Users\\Juhi.Agarwal\\Python\\To_be_sent\\'
+dfP.to_csv(path+'PlaceHolder.csv')
+	
+-------OR------
+df=pd.read_csv('C:\\Users\\Juhi.Agarwal\\Python\\AnalyticsVidhya\\train_u6lujuX_CVtuZ9i.csv')
+df.head()
+
+2. counting values
+df['Married'].value_counts() # counts no of values oof particular col does not count nulls
+df.count(axis=0) #DataFrame.count(axis=0, level=None, numeric_only=False) axis=0 for rows and 1 for column wise
+
+3. Categorical or continuous variable
+
+cols=df.columns
+num_cols = df._get_numeric_data().columns#grtting numeric columns
+cat_cols=list(set(cols) - set(num_cols))
+print(cat_cols)
+
+4. Data subsetting
+a.
+df['Gender']#selecting 1 particular col
+df[0:1]#slicing the rows
+#df.index
+b.
+df.loc[0]#selection by label if label name not there if label anme there then df.loc[dates[0]]
+df.loc[:,['Gender','Married']]#selecting GEnder and married col for all the label rows
+df.loc[1:3,['Gender','Married']]#col and row selection
+df.loc[1,['Gender','Married']]
+
+c.
+df.iloc[2:3,:]# using position for rows and columns
+df.iloc[[1,2,6],[1,5]]#using specific columns
+
+d.
+#data manipulation practice
+#eg: all females who are nt graduate, but have got a loan
+
+df.loc[(df["Gender"]=="Female") & (df["Education"]=="Not Graduate") & (df["Loan_Status"]=="Y"),["Gender","Education","Loan_Status"]]
+#filter value on basisi of column vlaue(select * from ABC where col='adsd')
+dfcc_df.loc[dfcc_df['CUSTOMER_CODE']==57163]
+
+
+2. Missing value imputation
+a.
+#checking sum of missing values
+def num_missing(x):
+    return sum(x.isnull())
+
+#applying per column
+print("missing values in cols")
+print(df.apply(num_missing,axis=0))
+
+#applying for rows
+print("applying for rows")
+print(df.apply(num_missing,axis=1))
+
+b.
+#replacing the missing values
+#df.fillna(with what u want to replace)
+from scipy.stats import mode
+df['Gender'].fillna(mode(df['Gender']).mode[0], inplace=True)
+---or--
+values = {'Gender': 'Male', 'Married': 'Yes', 'Self_Employed': 'No'}
+df1=df.fillna(value=values)
+
+
+c.
+#Pivot table in accordance to groups Gender,married,self employed and corresponding mean of the loanAmount
+impute_grps=df.pivot_table(values=["LoanAmount"],
+                           index=["Gender","Married","Self_Employed"],
+						   aggfunc=np.mean)
+						   
+print(impute_grps)
+						   
+
+#iterate only through rows with missing LoanAmount
+for i,row in data.loc[data['LoanAmount'].isnull(),:].iterrows():
+  ind = tuple([row['Gender'],row['Married'],row['Self_Employed']])
+  data.loc[i,'LoanAmount'] = impute_grps.loc[ind].values[0]
+  
+  
+  
+d.cross table
+col1=df["Credit_history"]
+col2=df["Loan_status"]
+ab=pd.crosstab(col1,col2,margins=True)
+In percentage
+ab.apply(perConvert,axis=1)
+def perConvert(ser):
+    return ser/float(ser[-1])
+
+OR you can directly write as pd.crosstab(df["Credit_history"],df["Loan_status"],margins=True)
+now converting into percentage
+pd.crosstab(df["Credit_history"],df["Loan_status"],margins=True).apply(perConvert,axis=1)
+
+
+3. Merging data set
+data_merged = df.merge(right=prop_rates, how='inner',left_on='Property_Area',right_index=True, sort=False)
+data_merged.pivot_table(values='Credit_History',index=['Property_Area','rates'], aggfunc=len)
+
+4.#sorting the data
+data_sorted = df.sort_values(['ApplicantIncome','CoapplicantIncome'], ascending=False)
+data_sorted[['ApplicantIncome','CoapplicantIncome']].head(10)
+
+5. Binning
+def binning(col,cut_points,labels):
+    minVal=col.min()
+    maxVal=col.max()
+    break_points=[minVal]+cut_points+[maxVal]
+    if not labels:
+        labels=range(len(cut_points)+1)
+    
+    colBin=pd.cut(col,bins=break_points,labels=labels,include_lowest=True)
+    return colBin
+        
+
+cut_points=[90,140,190]
+#labels=["low","medium","high","very high"]
+labels=[0,1,2,3]
+df["LoanAmount_bin"]=binning(df["LoanAmount"],cut_points,labels)
+print(pd.value_counts(df["LoanAmount_bin"],sort=False))
+#print(df['LoanAmount_bin'])
+
+6.
+#Label encoding for categorical char vars
+def coding(col,codeDict):
+    colCoded=pd.Series(col,copy=True)
+    for key,value in codeDict.items():
+        colCoded.replace(key,value,inplace=True)
+    return colCoded
+        
+
+print("Before coding")
+print(pd.value_counts(df["Loan_Status"]))
+df["Loan_Status_coded"]=coding(df["Loan_Status"],{'Y':1,'N':0})
+
+print("after coding")
+print(pd.value_counts(df["Loan_Status_coded"]))
+
+7.
+df.dtypes
+colTypes = pd.read_csv('C:\\Users\\Juhi.Agarwal\\Downloads\\datatypes.csv')
+print(colTypes)
+
+for i,row in colTypes.iterrows():
+    if row['type']=='categorical':
+        df[row['feature']]=df[row['feature']].astype(np.object)
+    elif row['type']=='continuous':
+        df[row['feature']]=df[row['feature']].astype(np.float)
+print(df.dtypes)
+        
+
+
+-------------------
+
+1.
+%matplotlib inline
+import pandas as pd
+import numpy as np
+import matplotlib as plt
+df=pd.read_csv('C:\\Users\\Juhi.Agarwal\\Python\\AnalyticsVidhya\\train_u6lujuX_CVtuZ9i.csv')
+#dfT=pd.read_csv('C:\\Users\\Juhi.Agarwal\\Python\\AnalyticsVidhya\\test_Y3wMUE5_7gLdaTN.csv')
+df.head()
+
+2.
+#gives the description of numeric cols
+des=df.describe()
+print(des)
+print("  ")
+#total count of all the cols removing the NAs
+cnt=df.count(axis=0)
+print(cnt)
+
+#STEP1:checking for responders and non responders
+pd.value_counts(df["Loan_Status"]=='Y')
+
+#STEP2: DATA CLEANSING
+#saved a csv file with data types and assigning those to the df col becasue we see that loan status is type but it should be categorical
+colTypes = pd.read_csv('C:\\Users\\Juhi.Agarwal\\Downloads\\datatypes.csv')
+for i,row in colTypes.iterrows():
+    if row['type']=='categorical':
+        df[row['feature']]=df[row['feature']].astype(np.object)
+    elif row['type']=='continuous':
+        df[row['feature']]=df[row['feature']].astype(np.float)
+print(df.dtypes)
+
+print("  ")
+
+#check the missing values
+
+'''def missing_num(x):
+    return sum(x.isnull())
+
+print("missing values")
+print(df.apply(missing_num,axis=0))'''
+
+print("missing values")
+print(df.apply(lambda x: sum(x.isnull()),axis=0))
+print("  ")
+        
+##categorising between numeric and categorical columns
+#getting columns 
+cols=df.columns
+#print(cols)
+num_cols = df._get_numeric_data().columns#grtting numeric columns
+print("num_cols: " + str(num_cols))
+cat_cols=list(set(cols) - set(num_cols))
+print("cat_cols: "+ str(cat_cols))
+
+
+#calculating different percentiles for continuos variables to check outliers
+dfP=df.quantile([.1,.5,.75,.9,.99,1])
+path='C:\\Users\\Juhi.Agarwal\\Python\\To_be_sent\\'
+dfP.to_csv(path+'PlaceHolder.csv')
+#CoapplicantIncome seems to have outliers
+
+#STEP 2C:a)removing outliers from continuous vars
+#df1.apply(lambda x: x.clip_upper(np.percentile(x, 99)))
+for col in df.columns:
+    if col=='CoapplicantIncome':
+        percentiles = df[col].quantile([0.01,0.99]).values
+        df[col][df[col] <= percentiles[0]] = percentiles[0]
+        df[col][df[col] >= percentiles[1]] = percentiles[1]
+
+#df.quantile([.1,.5,.75,.9,.99,1])
+
+#STEP 2C:b) Removing the nulls from the continuous vars
+df['LoanAmount'].fillna(df['LoanAmount'].mean(), inplace=True)
+df['Loan_Amount_Term'].fillna(df['Loan_Amount_Term'].mean(), inplace=True)
+
+#STEP 2A: Removing nulls from categorical vars
+df['Self_Employed'].value_counts()
+df['Self_Employed'].fillna('No',inplace=True)
+#other method on the basis of self_employed and Education
+'''table = df.pivot_table(values='LoanAmount', index='Self_Employed' ,columns='Education', aggfunc=np.median)
+print(table)
+def fage(x):
+    return table.loc[x['Self_Employed'],x['Education']]
+
+df['LoanAmount'].fillna(df[df['LoanAmount'].isnull()].apply(fage, axis=1), inplace=True)'''
+#df['Dependents'].value_counts()
+df['Dependents'].fillna(0,inplace=True)
+df['Married'].fillna('Yes',inplace=True)
+
+df['TotalIncome'] = df['ApplicantIncome'] + df['CoapplicantIncome']
+
+#removing nulls from married col
+def Gen(x):
+    if x['Married']=='Yes':
+        gender1='Male'
+    else:
+        gender1='Female'
+    return gender1
+df['Gender'].fillna(df[df['Gender'].isnull()].apply(Gen, axis=1),inplace=True)
+
+#removing nulls from Credit history col
+
+Credit_grps= df.pivot_table(values=["Credit_History"], index=["Gender","Married","Education","Self_Employed"], aggfunc='sum')
+#print(Credit_grps)
+
+def CreditH(x):
+    if x['Education']=='Graduate':
+        credit=1
+    else:
+        credit=0
+    return credit
+    
+df['Credit_History'].fillna(df[df['Credit_History'].isnull()].apply(CreditH, axis=1),inplace=True)
+
+
+print(df.apply(lambda x: sum(x.isnull()),axis=0))
+
+def ageBinning(x):
+    if x<=17:
+        return 0
+    elif x>17 and x<=30:
+        return 18
+    elif x>30 and x<=40:
+        return 40
+    elif x>40 and x<=50:
+        return 50
+    else:
+        return 51
+
+
+VP_df['ageB'] = VP_df.apply(lambda row: ageBinning(row['age']), axis=1)
+
+
+path='C:\\Users\\Juhi.Agarwal\\Python\\To_be_sent\\'
+df.to_csv(path+'treateddate.csv')
+
+#STEP2B
+LabelEncoding={"Gender":{"Male":0,"Female":1},"Married":{"No":0,"Yes":1},"Dependents":{"0":0,"1":1,"2":2,"3+":3},"Education":{"Graduate":1,"Not Graduate":0},"Self_Employed":{"No":0,"Yes":1},"Property_Area":{"Urban":1,"Rural":0,"Semiurban":2},"Loan_Status":{"No":0,"Yes":1}}
+df.replace(LabelEncoding,inplace=True)
+#path='C:\\Users\\Juhi.Agarwal\\Python\\To_be_sent\\'
+#df.to_csv(path+'treateddate.csv')
+df.head()
+
+#Import models from scikit learn module:
+from sklearn.linear_model import LogisticRegression
+from sklearn.cross_validation import KFold   #For K-fold cross validation
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn import metrics
+
+#for Test file
+for i,row in colTypes.iterrows():
+    if row['type']=='categorical':
+        dfT[row['feature']]=dfT[row['feature']].astype(np.object)
+    elif row['type']=='continuous':
+        dfT[row['feature']]=dfT[row['feature']].astype(np.float)
+#print(dfT.dtypes)
+for col in dfT.columns:
+    if col=='CoapplicantIncome':
+        percentiles = dfT[col].quantile([0.01,0.99]).values
+        dfT[col][dfT[col] <= percentiles[0]] = percentiles[0]
+        dfT[col][dfT[col] >= percentiles[1]] = percentiles[1]
+        
+        
+dfT['LoanAmount'].fillna(dfT['LoanAmount'].mean(), inplace=True)
+dfT['Loan_Amount_Term'].fillna(dfT['Loan_Amount_Term'].mean(), inplace=True)
+
+#dfT['Self_Employed'].value_counts()
+dfT['Self_Employed'].fillna('No',inplace=True)
+dfT['Dependents'].fillna(0,inplace=True)
+dfT['Married'].fillna('Yes',inplace=True)
+dfT['TotalIncome'] = dfT['ApplicantIncome'] + dfT['CoapplicantIncome']
+dfT['Gender'].fillna(dfT[dfT['Gender'].isnull()].apply(Gen, axis=1),inplace=True)
+dfT['Credit_History'].fillna(dfT[dfT['Credit_History'].isnull()].apply(CreditH, axis=1),inplace=True)
+dfT.replace(LabelEncoding,inplace=True)
+
+
+#Generic function for making a classification model and accessing performance:
+def classification_model(model,data,predictors,outcome):
+    #fit the model:
+    model.fit(data[predictors],data[outcome])
+    
+    #make predictions on the training data set
+    predictions=model.predict(data[predictors])
+    
+    #print accuracy
+    accuracy = metrics.accuracy_score(predictions,data[outcome])
+    print("Accuracy : %s" % "{0:.3%}".format(accuracy))
+    
+    #Perform k-fold cross-validation with 5 folds
+    kf = KFold(data.shape[0], n_folds=5)
+    error=[]
+    
+    for train, test in kf:
+        # Filter training data
+        train_predictors = (data[predictors].iloc[train,:])
+        
+        # The target we're using to train the algorithm.
+        train_target = data[outcome].iloc[train]
+        
+        # Training the algorithm using the predictors and target.
+        model.fir(data[train_predictors],train_target)
+        
+        #Record error from each cross-validation run
+        error.append(model.score(data[predictors].iloc[test,:], data[outcome].iloc[test]))
+#print("Cross-Validation Score : %s" % "{0:.3%}".format(np.mean(error)))
+model.fit(data[predictors],data[outcome]) 
+    
+    
+
+outcome_var = 'Loan_Status'
+model = LogisticRegression()
+predictor_var = ['Credit_History']
+classification_model(model, df,predictor_var,outcome_var)
+
+IF(AND(AP2=0,AS2=0),0,1)
+
+-----------------------------------
+calculating no of zeros in a column
+zz=dfcc_df.apply(lambda column:(column == 0).sum())
+zz.to_csv(dir2+'zz.csv')
+-----------------------------------------------
+pd.qcut()--bins based on values, here the bins will be evenly spaced
+pd.cut()--bins based on sample quantiles, bins are chosen such that you have same number of records in each cut
+this doesnt seem correct
+
+------------------------------
+result.groupby(['GENDER','SAV_ACCT_FLAG']).sum()
+result.groupby(by=['decile'])['target'].sum()
+result['target'].groupby(by=['decile']).sum()
+
+#encoding the target varaible
+#encode dict
+product_1_encoded={"SBC": 1,"SBA": 2,"SBD": 3,"SBB": 4,"SBF": 5,"SBE": 6,"PPG": 7,"EPA": 8,
+"EPB": 9,"LTP": 10,"HPA": 11,"PPC": 12,"PPD": 13,"PSA": 14,"PSB": 15,"PPH": 16,np.nan: 17}
+
+#creating target variable(new column)
+dfcc_df['target'] = dfcc_df['PRODUCT_1_CODE'].apply(lambda x: product_1_encoded[x])
+#dfcc_df[['PRODUCT_1_CODE', 'target']].tail(10)
+dfcc_df.loc[dfcc_df['target']!=17,['CUSTOMER_CODE','target']].head()
+-------------------Summary------------------
+#Summary
+summary_pd = dfcc_df.describe().transpose()
+summary_pd.to_csv(dir+'summary_pd.csv')
+#missing values
+missing=dfcc_df.apply(lambda x: sum(x.isnull()),axis=0)
+missing.to_csv(dir+'missing.csv')
+#count of values
+cnt=dfcc_df.count(axis=0)
+cnt.to_csv(dir+'cnt.csv')
+#count number of zeros
+zz=dfcc_df.apply(lambda column:(column == 0).sum())
+zz.to_csv(dir+'zz.csv')
+#customers count /duplicates
+uniqueCust=dfcc_df['CUSTOMER_CODE'].value_counts()
+uniqueCust.to_csv(dir+'uniqueCust.csv')
+#percentiles
+percentile=ContinuousU.quantile([0,.1,.25,.5,.75,.85,.9,.95,1]).transpose()
+percentile.to_csv(dir+'percentile.csv')
+#desc
+col=dfcc_df.loc[:,["CUSTOMER_CODE","PRODUCT_1_CODE","PRODUCT1_DESCRIPTION","DATE_OF_COMMENCEMENT1"]]
+col.to_csv(dir+'col1.csv')
+----------------------dropping rows and col0--------------
+#dropping records that have customercode null
+dfcc_df=dfcc_df[dfcc_df['CUSTOMER_CODE'].notnull()]
+dfcc_df=dfcc_df[dfcc_df['CUSTOMER_CODE'].isnull()]
+
+#dropping columns which do not have data
+dropCol=["NRIC","COLUMN130"]
+dfcc_df=dfcc_df.drop(dropCol, 1)
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+dfcc_df[colCatDummy].fillna(dfcc_df.mode().iloc[0],inplace=True)---this needs to be assigned to somehting
+--this does not require assigning back
+for column in ["GENDER","MARITALSTATUS"]:
+    dfcc_df[column].fillna(dfcc_df[column].mode()[0], inplace=True)
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+import datetime
+today = datetime.date.today()
+print(today)
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import datetime
+datetime.datetime.strptime('12-Mar-2017','%d-%b-%Y').strftime('%Y-%b-%d')datetime.date(dfcc_df["DATE_OF_COMMENCEMENT1"])
+datetime.datetime.strptime(dfcc_df["DATE_OF_COMMENCEMENT1"],'%Y-%m-%d').strftime('')
+dfcc_df["DATE_OF_COMMENCEMENT1"].unique()
+#pd.to_datetime(dfcc_df["DATE_OF_COMMENCEMENT1"], format='%Y%m%d', errors='ignore').unique()
+
+-------------------label encoding------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+from sklearn import preprocessing
+le = preprocessing.LabelEncoder()
+le.fit(dfcc_df["GENDER"])
+le.classes_
+#array([1, 2, 6])
+dfcc_df["GENDER_en"]=le.transform(dfcc_df["GENDER"]) 
+#array([0, 0, 1, 2]...)
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+df.isnull().any() for checking columns with null or not
+=============================================================
+
+'''
+from sklearn.model_selection import KFold
+kf = KFold(n_splits=5) # Define the split - into 2 folds 
+kf.get_n_splits(X) # returns the number of splitting iterations in the cross-validator
+print(kf)
+
+#dfcc_df1.head()
+missing2=dfcc_df1.apply(lambda x: sum(x.isnull()),axis=0)
+missing2.to_csv(dir+"missing2.csv")
+'''
+-----------------------
+'''t=dfcc_df1.target
+for train_index, test_index in skf.split(np.zeros(len(t)), t):
+    print("Train:"+ train_index + "Test:" + test_index)
+    #print("TRAIN:", train_index, "TEST:", test_index)
+    #X_train, X_test = X[train_index], X[test_index]
+    #Y_train, Y_test =Y[train_index],Y[test_index]
+    train = dfcc_df1.loc[train_index]
+    test = dfcc_df1.loc[test_index]
+    print("Train:"+ train_index + "Test:" + test_index)'''
+
+----------------------------------
+'''
+for train_index, test_index in kf.split(X):
+    #print("TRAIN:"+ train_index + "TEST:" + test_index)
+    X_train = X[train_index] 
+    X_test = X[test_index]
+    y_train = y[train_index] 
+    y_test = y[test_index]'''
+------------------------
+'''
+from random import seed
+from random import randrange
+from sklearn.model_selection import cross_validation_split 
+# Split a dataset into k folds
+def cross_validation_split(dfcc_df1, folds=3):
+    dataset_split = list()
+    dataset_copy = list(dataset)
+    fold_size = int(len(dataset) / folds)
+    for i in range(folds):
+        fold = list()
+        while len(fold) < fold_size:
+            index = randrange(len(dataset_copy))
+            fold.append(dataset_copy.pop(index))
+        dataset_split.append(fold)
+    return dataset_split
+ 
+# test cross validation split
+seed(1)
+#dataset = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]]
+folds = cross_validation_split(dataset, 4)
+print(folds)'''
+==============================================================
+IV-WOE
+--------
+
+# Calculate information value
+def calc_iv(df, feature, target, pr=False):
+    """
+    Set pr=True to enable printing of output.
+    
+    Output: 
+      * iv: float,
+      * data: pandas.DataFrame
+    """
+
+    lst = []
+
+    #df[feature] = df[feature].fillna("NULL")
+
+    for i in range(df[feature].nunique()):
+        val = list(df[feature].unique())[i]
+        lst.append([feature,                                                        # Variable
+                    val,                                                            # Value
+                    df[df[feature] == val].count()[feature],                        # All
+                    df[(df[feature] == val) & (df[target] == 0)].count()[feature],  # Good (think: Fraud == 0)
+                    df[(df[feature] == val) & (df[target] == 1)].count()[feature]]) # Bad (think: Fraud == 1)
+
+    data = pd.DataFrame(lst, columns=['Variable', 'Value', 'All', 'Good', 'Bad'])
+
+    data['Share'] = data['All'] / data['All'].sum()
+    data['Bad Rate'] = data['Bad'] / data['All']
+    data['Distribution Good'] = (data['All'] - data['Bad']) / (data['All'].sum() - data['Bad'].sum())
+    data['Distribution Bad'] = data['Bad'] / data['Bad'].sum()
+    data['WoE'] = np.log(data['Distribution Good'] / data['Distribution Bad'])
+
+    data = data.replace({'WoE': {np.inf: 0, -np.inf: 0}})
+
+    data['IV'] = data['WoE'] * (data['Distribution Good'] - data['Distribution Bad'])
+
+    data = data.sort_values(by=['Variable', 'Value'], ascending=[True, True])
+    data.index = range(len(data.index))
+
+    if pr:
+        print(data)
+        print('IV = ', data['IV'].sum())
+
+
+    iv = data['IV'].sum()
+    # print(iv)
+
+    return iv, data
+
+#iv, data = calc_iv(dfcc_df1,'OTC_CUS_IND','target')
+
+list1=[]
+list2=[]
+for col in ["AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE"]:
+    iv,data=calc_iv(dfcc_df1,col,'target')
+    list1.append(iv)
+    list2.append(data)
+	
+---one hot encoding-----
+from sklearn.feature_extraction import DictVectorizer
+vec = DictVectorizer(sparse=False, dtype=int)
+vec.fit_transform(data)
+
+when using sci kit learn the packages's model assumes that numeric value indicates algebric quantities.Thus label encoding is not the best thing and one hot encoding seems to be a better approach.
+
+   ----making new column-------------
+  dummy['Cntsrv'] = np.where(dummy['ATM_CUS_IND']>=50, 'yes', 'no')
+----Join------------
+A=pd.DataFrame({'key':[101,102,103,104],'valueA':["aa","bb","cc","dd"]})
+B=pd.DataFrame({'key':[101,104,103,105],'valueB':["bbb","aaa","ccc","ee"]})
+A.join(B,lsuffix='_A',rsuffix='_B')#join on basis of index
+A.set_index("key").join(B.set_index('key')) or 
+A.join(B.set_index("key"),on="key") #will give all values for left dataset
+--------------------------------------------------
+dfcc_dfO=dfcc_dfO[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1",
+"AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6",
+"NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_MB_TRANS_LM1","AVG_M_MB_TRANS_LM3","AVG_M_MB_TRANS_LM6",
+"AVG_M_MB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3",
+"AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12","AVG_FCY_P1_3_VS_P4_6_MTHS"]].copy()
+
+targetP=dfcc_dfP[["CUSTOMER_CODE","target"]].copy()
+dataset=dfcc_dfO.join(targetP.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE")
+dataset.head()
+
+dataset=dfcc_dfO.join(targetP.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE")
+dataset.head()
+
+--------------------------------------------------------
+for building ROC for linear regression
+import matplotlib.pyplot as plt
+fig,ax=plt.subplots()
+ax.scatter(y,y_pred,edgecolors=(0,0,0))
+ax.plot([y.min(),y.max()],[y.min(),y.max()],'k--',lw=4)
+ax.set_xlabel('measured')
+ax.set_ylabel('predicted')
+plt.show()
+
+------------------------csv--
+1)to keep the leading zeros while importing from csv
+#https://stackoverflow.com/questions/13250046/pandas-csv-import-keep-leading-zeros-in-a-column
+dfcc_df0317 = pd.read_csv(dir+"AIA_DATA_File_31_03_2017.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)})
+dfcc_df0318 = pd.read_csv(dir+"AIA_DATA_File_04_05_2018.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)})
+
+
+2)to keep leading zeros while exporting to csv 
+https://stackoverflow.com/questions/41240535/how-can-i-keep-leading-zeros-in-a-column-when-i-export-to-csv
+to keep the leading zeros while exporting to csv
+dfcc_df0317["CUSTOMER_CODE"] = dfcc_df0317["CUSTOMER_CODE"].apply('="{}"'.format)
+dfcc_df0317.to_csv(dir+'test_leading_zeros.csv')
+
+------------------check if negative valiue in column----------------
+(dfcc_df[to_log] < 0).any()
+
+---------shuffling---------------
+df = df.sample(frac=1).reset_index(drop=True)
+
+---ROC pred prob
+https://stackoverflow.com/questions/28787500/predict-proba-for-a-cross-validated-model
+-------------------Model parameters
+#step10c
+from sklearn import linear_model, metrics
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
+accuracies=cross_val_score(logisticRegr, df, y['target'], cv = 5, scoring = 'accuracy')#will give 5 accuracies
+avg_accuracy=accuracies.mean()
+print("avg_accuracy: %s" %(avg_accuracy))
+##
+
+
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix
+y_pred = cross_val_predict(logisticRegr,df, y['target'], cv = 5)
+
+prob=cross_val_predict(logisticRegr,df, y['target'], cv = 5, method='predict_proba')
+#prob1=pd.DataFrame(cross_val_predict(logisticRegr,df, y['target'], cv = 5, method='predict_proba'),columns=logisticRegr.classes_)
+conf_mat = confusion_matrix(y,y_pred)
+print("Confusion_matrix: %s" %(conf_mat))
+
+#question no where have i mentioned my thrshold for predicted values
+##
+tn, fp, fn, tp = confusion_matrix(y,y_pred).ravel()
+print("TN:%s FP:%s FN:%s TP:%s" %(tn, fp, fn, tp))
+
+#from confusion matrix
+accuracy1=(tn+tp)/(tn+fp+fn+tp)
+sensitivity=tp/(tp+fn)#true positive rate#recall
+precision=tp/(tp+fp)
+#FPR=fp/(fp+tp)
+print("accuracy: %s" %(accuracy1))
+print("sensitivity: %s" %(sensitivity))
+print("precision: %s" %(precision))
+#print("ROC: %s" %(roc))
+#print("FPR: %s" %(FPR))
+#cross_val_score(logisticRegr, df, y['target'], cv = 5, scoring = 'roc_auc')
+---------------------
+ROC -AUC
+#calcualting the roc
+prob=pd.DataFrame(prob)
+prob.columns=['Pred_0','Pred_1']
+roc=roc_auc_score(y, prob["Pred_1"], sample_weight=None)
+print(roc)
+-----or-------
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y, prob["Pred_1"])
+print(auc(false_positive_rate, true_positive_rate))
+
+# calculate the fpr and tpr for all thresholds of the classification
+
+preds = pd.DataFrame(y_pred)
+fpr, tpr, threshold = metrics.roc_curve(y, prob["Pred_1"])
+roc_auc = metrics.auc(fpr, tpr)
+
+roc_auc
+--------------merging with prefix
+from datetime import datetime
+dfcc_df0317["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0317["DATE_OF_COMMENCEMENT1"])
+dfcc_df0318["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0318["DATE_OF_COMMENCEMENT1"])
+dfcc_dfAll=dfcc_df0317.join(dfcc_df0917.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE",lsuffix='_0317', rsuffix='_0918')
+#Summary
+summary_pd = dfcc_dfAll.describe().transpose()
+summary_pd.to_csv(dir+'summary_Sep.csv')
+
+---types to convert categorical-----------
+http://pbpython.com/categorical-encoding.html
+
+
+--Appendix----
+#calcualting the roc
+prob=pd.DataFrame(prob)
+prob.columns=['Pred_0','Pred_1']
+roc=roc_auc_score(y, prob["Pred_1"], sample_weight=None)
+print(roc)
+
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y, prob["Pred_1"])
+print(auc(false_positive_rate, true_positive_rate))
+		
+		
+# calculate the fpr and tpr for all thresholds of the classification
+
+preds = pd.DataFrame(y_pred)
+fpr, tpr, threshold = metrics.roc_curve(y, prob["Pred_1"])
+roc_auc = metrics.auc(fpr, tpr)
+
+roc_auc		
+
+
+##########points to remember#########
+1)ways you can note whether the data is over fitting
+--cross validation
+--Bootstrap
+https://stats.stackexchange.com/questions/81576/how-to-judge-if-a-supervised-machine-learning-model-is-overfitting-or-not
+
+
+https://www.analyticsvidhya.com/blog/2016/02/7-important-model-evaluation-error-metrics/
+
+
+___-deciding no of estimators in Random Forest-------------
+https://medium.com/@mohtedibf/in-depth-parameter-tuning-for-random-forest-d67bb7e920d
+import matplotlib as mpl
+from sklearn.metrics import roc_curve, auc
+#n_estimators
+import matplotlib as mpl
+from sklearn.metrics import roc_curve, auc
+n_estimators = [1, 2, 4, 8, 16, 32, 64, 100, 200,400,800]
+train_results = []
+test_results = []
+for estimator in n_estimators:
+    probT=[]
+    probTe=[]
+    rf = RandomForestClassifier(n_estimators=estimator, n_jobs=-1)
+    rf.fit(x_train, y_train)
+    train_pred = rf.predict_proba(x_train)
+    probT=pd.DataFrame(train_pred)
+    probT.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_train, probT["Pred_1"])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    train_results.append(roc_auc)
+    y_pred = rf.predict_proba(x_test)
+    probTe=pd.DataFrame(y_pred)
+    probTe.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, probTe['Pred_1'])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    test_results.append(roc_auc)
+    
+train_results=pd.DataFrame(train_results)
+test_results=pd.DataFrame(test_results)
+
+data=train_results.join(test_results,lsuffix='_train',rsuffix='_test') 
+No=pd.DataFrame(n_estimators)
+estimators=No.join(data)
+estimators=pd.DataFrame(estimators)
+estimators.to_csv(dir+'estimators.csv')
+
+from matplotlib.legend_handler import HandlerLine2D
+line1, = plt.plot(n_estimators, train_results, 'b', label='Train AUC')
+line2, = plt.plot(n_estimators, test_results, 'r', label='Test AUC')
+plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
+plt.ylabel('AUC score')
+plt.xlabel('n_estimators')
+plt.show()
+-----------------------------------------------------
+#min_samples_splits
+min_samples_splits = np.linspace(0.1, 1.0, 10, endpoint=True)
+train_results = []
+test_results = []
+for min_samples_split in min_samples_splits:
+    probT=[]
+    probTe=[]
+    rf = RandomForestClassifier(min_samples_split=min_samples_split)
+    rf.fit(x_train, y_train)
+    train_pred = rf.predict_proba(x_train)
+    probT=pd.DataFrame(train_pred)
+    probT.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_train, probT["Pred_1"])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    train_results.append(roc_auc)
+    y_pred = rf.predict_proba(x_test)
+    probTe=pd.DataFrame(y_pred)
+    probTe.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, probTe['Pred_1'])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    test_results.append(roc_auc)
+    
+train_results=pd.DataFrame(train_results)
+test_results=pd.DataFrame(test_results)
+
+data=train_results.join(test_results,lsuffix='_train',rsuffix='_test') 
+No=pd.DataFrame(n_estimators)
+No.join(data)
+
+from matplotlib.legend_handler import HandlerLine2D
+line1, = plt.plot(min_samples_splits, train_results, 'b', label='Train AUC')
+line2, = plt.plot(min_samples_splits, test_results, 'r', label='Test AUC')
+plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
+plt.ylabel('AUC score')
+plt.xlabel('min samples split')
+plt.show()
+
+#70 is the best min_samples_splits
+
+---------------------------------------------
+#min_samples_leafs
+min_samples_leafs = np.linspace(0.1, 0.5, 5, endpoint=True)
+train_results = []
+test_results = []
+for min_samples_leaf in min_samples_leafs:
+    probT=[]
+    probTe=[]
+    rf = RandomForestClassifier(min_samples_leaf=min_samples_leaf)
+    rf.fit(x_train, y_train)
+    train_pred = rf.predict_proba(x_train)
+    probT=pd.DataFrame(train_pred)
+    probT.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_train, probT["Pred_1"])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    train_results.append(roc_auc)
+    y_pred = rf.predict_proba(x_test)
+    probTe=pd.DataFrame(y_pred)
+    probTe.columns=['Pred_0','Pred_1']
+    false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, probTe['Pred_1'])
+    roc_auc = auc(false_positive_rate, true_positive_rate)
+    test_results.append(roc_auc)
+    
+train_results=pd.DataFrame(train_results)
+test_results=pd.DataFrame(test_results)
+
+data=train_results.join(test_results,lsuffix='_train',rsuffix='_test') 
+No=pd.DataFrame(n_estimators)
+No.join(data)
+
+   
+from matplotlib.legend_handler import HandlerLine2D
+line1, = plt.plot(min_samples_leafs, train_results, 'b', label='Train AUC')
+line2, = plt.plot(min_samples_leafs, test_results, 'r', label='Test AUC')
+plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
+plt.ylabel('AUC score')
+plt.xlabel('min samples leaf')
+plt.show()
+
+
+-------gradient boosting-----------
+
+def modelfit(alg, dtrain, target,predictors, performCV=True, printFeatureImportance=True, cv_folds=5):
+    #Fit the algorithm on the data
+    alg.fit(dtrain[predictors], target)
+        
+    #Predict training set:
+    dtrain_predictions = alg.predict(dtrain[predictors])
+    dtrain_predprob = alg.predict_proba(dtrain[predictors])[:,1]
+    
+    #Perform cross-validation:
+    if performCV:
+        cv_score = cross_validation.cross_val_score(alg, dtrain[predictors], target, cv=cv_folds, scoring='roc_auc')
+    
+    #Print model report:
+    print("\nModel Report")
+    print("Accuracy : %.4g" % metrics.accuracy_score(target.values, dtrain_predictions))
+    print("AUC Score (Train): %f" % metrics.roc_auc_score(target, dtrain_predprob))
+    
+    if performCV:
+        print("CV Score : Mean - %.7g | Std - %.7g | Min - %.7g | Max - %.7g" % (np.mean(cv_score),np.std(cv_score),np.min(cv_score),np.max(cv_score)))
+        
+    #Print Feature Importance:
+    if printFeatureImportance:
+        feat_imp = pd.Series(alg.feature_importances_, predictors).sort_values(ascending=False)
+        feat_imp.plot(kind='bar', title='Feature Importances')
+        plt.ylabel('Feature Importance Score')
+		
+#In percentage
+dfcc_df['target'].value_counts().apply(lambda x:x/dfcc_df.count())		
+		
+--feature importance 
+#feature selection using CV
+from sklearn.feature_selection import RFECV
+selector = RFECV(logisticRegr, step=1, cv=5)
+selector = selector.fit(x_train, y_train)
+selector.ranking_
+cvrank=pd.DataFrame(selector.ranking_)
+cvrank.to_csv(dir+'cvrank.csv')
+cvCol=pd.DataFrame(x_train.columns)
+cvCol.to_csv(dir+'cvCol.csv')
+
+#feature importance using RF
+importances = rf.feature_importances_
+indices = np.argsort(importances)
+importances=pd.DataFrame(importances)
+importances.to_csv(dir+'importances.csv')
+indices=pd.DataFrame(indices)
+indices.to_csv(dir+'indices.csv')
+
+-plot
+features=df.columns
+fe=pd.DataFrame(features)
+fe.to_csv(dir+'fe.csv')
+
+plt.figure(1)
+plt.title('Feature Importances')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), features[indices])
+plt.xlabel('Relative Importance')
+# fi using logistic
+from sklearn.feature_selection import RFE
+rfe = RFE(logisticRegr,1)
+rfe = rfe.fit(x_train, y_train)
+print(rfe.support_)
+aa=rfe.ranking_
+aa=pd.DataFrame(aa)
+aa.to_csv(dir+'aa.csv')
+
+cols=pd.DataFrame(x_train.columns)
+cols.to_csv(dir+'cols.csv')
+
+
+
+
+#https://stackoverflow.com/questions/41240535/how-can-i-keep-leading-zeros-in-a-column-when-i-export-to-csv
+#to keep the leading zeros while exporting to csv
+#dfcc_df0317["CUSTOMER_CODE"] = dfcc_df0317["CUSTOMER_CODE"].apply('="{}"'.format)
+#dfcc_df0317.to_csv(dir+'test_leading_zeros.csv')
+
+def f(row):
+    if row['AVG_FCY_AMT_TRAN_AMT_LM12'] == 0:
+        val = 0
+    else:
+        val = 1
+    return val
+
+dfcc_df['FCY_indicator'] = dfcc_df.apply(f, axis=1)
+
+c2=pd.crosstab(dfcc_df['OTC_CUS_IND'],dfcc_df['FCY_indicator']).apply(lambda x: x/x.sum(), axis=1)
+c2.to_csv(dir+'c2.csv')
+
+pd.crosstab(dfcc_df['OTC_CUS_IND'],dfcc_df['FCY_indicator']).apply(lambda x: x/x.sum(), axis=1)
+
+
+#dfcc_df.loc[(dfcc_df['SA_INDICATER']==0) & (dfcc_df['CA_INDICATER']==0),['SA_INDICATER','CA_INDICATER','target']]
+
+
+####pickling
+##Pickling
+# saves the model to disk
+
+import pickle
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+plt.style.use('default')
+import csv
+from datetime import datetime
+dir = 'C:\\Users\\Public\\Documents\\DFCC_finalData\\Data17_18\\'
+#dir2 = 'C:\\Users\\Public\\Documents\\DFCC_finalData\\Data17_18\\Again\\'
+dfcc_df0317 = pd.read_csv(dir+"AIA_DATA_FILE_31_03_2017.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+dfcc_df0318 = pd.read_csv(dir+"AIA_DATA_File_04_05_2018.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+dfcc_df0917 = pd.read_csv(dir+"AIA_DATA_FILE_30_09_2017.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+
+from datetime import datetime
+dfcc_df0317["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0317["DATE_OF_COMMENCEMENT1"])
+dfcc_df0318["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0318["DATE_OF_COMMENCEMENT1"])
+dfcc_df0917["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0917["DATE_OF_COMMENCEMENT1"])
+
+#Model2:Observation window : before 31 march and prediction window: 31 march 2017-30 sep 2017
+#2
+#dfcc_df11=dfcc_df0317[(dfcc_df0317['DATE_OF_COMMENCEMENT1'] >= '2017-04-01') | (dfcc_df0317['DATE_OF_COMMENCEMENT1'].isnull())]#customer base who have no AIA product till march,2017
+dfcc_dfP2=dfcc_df0917.loc[(dfcc_df0917["DATE_OF_COMMENCEMENT1"]>= '2017-04-01') & (dfcc_df0917["DATE_OF_COMMENCEMENT1"]<= '2017-09-30') |(dfcc_df0317['DATE_OF_COMMENCEMENT1'].isnull())]
+dfcc_dfO2=dfcc_df0317.drop(dfcc_df0317[dfcc_df0317['DATE_OF_COMMENCEMENT1']<'2017-04-01'].index)
+Y2018=dfcc_dfP2[["CUSTOMER_CODE","PRODUCT_1_CODE"]].copy()
+
+#3
+dfcc_dfO2=dfcc_dfO2[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3",
+"AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1"
+,"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER",
+"NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+
+#4
+#customer base created
+dfcc_df2=dfcc_dfO2.join(Y2018.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE") #will give all values for left dataset
+
+#Model3:Observation window : 31 march,2017 to 30 Sep,2017 and prediction window: after 1 oct,2017 
+
+dfcc_dfP3=dfcc_df0318.loc[(dfcc_df0318["DATE_OF_COMMENCEMENT1"]>= '2017-09-30') |(dfcc_df0318['DATE_OF_COMMENCEMENT1'].isnull())]
+dfcc_dfO3=dfcc_df0917.drop(dfcc_df0917[dfcc_df0917['DATE_OF_COMMENCEMENT1']<'2017-09-30'].index)
+Y2018=dfcc_dfP3[["CUSTOMER_CODE","PRODUCT_1_CODE"]].copy()
+
+dfcc_dfO3=dfcc_dfO3[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3",
+"AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1"
+,"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER",
+"NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+
+#4
+#customer base created
+dfcc_df3=dfcc_dfO3.join(Y2018.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE") #will give all values for left dataset
+
+
+frames=[dfcc_df2,dfcc_df3]
+dfcc_df=pd.concat(frames,ignore_index=True)
+
+#5
+#encoding the target varaible
+dfcc_df["PRODUCT_1_CODE"].fillna('NTH',inplace = True)
+#encode dict
+product_1_encoded={"SBC": 1,"SBA": 1,"SBD": 1,"SBB": 1,"SBF": 1,"SBE": 1,"PPG": 1,"EPA": 1,
+"EPB": 1,"LTP": 1,"HPA": 1,"PPC": 1,"PPD": 1,"PSA": 1,"PSB": 1,"PPH": 1,"NTH": 0}
+
+#creating target variable(new column) and filling with product_1_encoded values
+dfcc_df['target'] = dfcc_df['PRODUCT_1_CODE'].apply(lambda x: product_1_encoded[x])
+
+
+#6 replacng by mean in the continuous variables
+
+continuousCol=list((dfcc_df.loc[:, (dfcc_df.dtypes==np.float64)]).columns)
+continuousCol=["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","NO_FD_ACCT",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+
+dfcc_df[continuousCol].apply(lambda x: x.fillna(x.mean()),axis=0)
+
+
+
+#7 
+dfcc_df["NO_OTC_C_AMT_TRANS_LM1"].fillna(0,inplace=True)
+dfcc_df["CUSTOMER_TENURE"].fillna(0,inplace=True)
+
+#8 replacing by mode of the value
+for column in ["CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","target"]:
+    dfcc_df[column].fillna(dfcc_df[column].mode()[0], inplace=True)
+
+#9 log trasformation with very high value
+to_log=["NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+dfcc_df[to_log].applymap(lambda x: np.log(x+1))
+
+#step6
+#part of binning
+labels=[0,1,2,3,4,5,6,7,8,9]
+
+for col in ["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6",
+"NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1",
+"AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6",
+"NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1",
+"AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6",
+"AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6",
+"AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","NO_FD_ACCT","NO_FD_ACCT_MATURED_IN_M3"]:
+    dfcc_df[col]=pd.cut(dfcc_df[col],bins=10,labels=labels)
+    
+    
+#step 7
+#label encoding for categorical vars
+from sklearn import preprocessing
+for col in ["CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1",
+"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]:
+    le = preprocessing.LabelEncoder()
+    le.fit(dfcc_df[col])
+    le.classes_
+    dfcc_df[col]=le.transform(dfcc_df[col])
+    
+    
+dfcc_df=dfcc_df[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1",
+"AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3",
+"AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1",
+"AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3",
+"AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3",
+"AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12","target"]].copy()
+
+
+#step 8
+#Balancing dataset
+import random
+random.seed(32)
+#target 0 is for those we do not have product information and target =1 for those we have info
+target_0_total = dfcc_df[dfcc_df['target'] == 0].index#non responders
+target_1 = dfcc_df[dfcc_df['target'] == 1].index#responders
+sample_size = sum(dfcc_df['target'] == 1)*4  # Equivalent to len(data[data.Healthy == 0])
+
+
+target_0 = np.random.choice(target_0_total, sample_size, replace=False)
+
+df0=dfcc_df.loc[target_0]
+df1=dfcc_df.loc[target_1]
+df=[df0,df1]
+dfcc_df1=pd.concat(df)
+
+#shuffle dataset
+dfcc_df1 = dfcc_df1.sample(frac=1).reset_index(drop=True)
+
+#STEp 9 Round 1
+df=dfcc_df1[["CUSTOMER_CODE","AGE","GENDER","RACE","CITIZENSHIP","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","AVG_M_OTC_TRANS_P1_3VSP4_6","AVG_M_OTC_C_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","AVG_M_NON_OTC_C_TRANS_LM6",
+"NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_OB_TRANS_P1_3VSP4_6","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM6","NO_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+y=dfcc_df1[["CUSTOMER_CODE","target"]].copy()
+
+
+#Step11a Random Forest on balanced dataset
+#step10a
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict
+#splitting dataset into training and test dataset
+x_train, x_test, y_train, y_test = train_test_split(df, y['target'], test_size=0, random_state=20)
+
+import random
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import linear_model, metrics
+from sklearn.metrics import roc_auc_score
+from sklearn import linear_model, metrics
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
+rf = RandomForestClassifier(n_estimators=32,bootstrap=False,min_samples_leaf=32,min_samples_split=70,random_state=113)
+
+rf.fit(x_train, y_train)
+
+filename = 'pickling.py'
+pickle.dump(rf, open(filename, 'wb'))
+
+####job lib
+##JobLib
+# save the model to disk
+
+from sklearn.externals import joblib
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+plt.style.use('default')
+import csv
+from datetime import datetime
+dir = 'C:\\Users\\Public\\Documents\\DFCC_finalData\\Data17_18\\'
+
+dfcc_df0317 = pd.read_csv(dir+"AIA_DATA_FILE_31_03_2017.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+dfcc_df0318 = pd.read_csv(dir+"AIA_DATA_File_04_05_2018.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+dfcc_df0917 = pd.read_csv(dir+"AIA_DATA_FILE_30_09_2017.dsv",sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+
+from datetime import datetime
+dfcc_df0317["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0317["DATE_OF_COMMENCEMENT1"])
+dfcc_df0318["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0318["DATE_OF_COMMENCEMENT1"])
+dfcc_df0917["DATE_OF_COMMENCEMENT1"]=pd.to_datetime(dfcc_df0917["DATE_OF_COMMENCEMENT1"])
+
+#Model2:Observation window : before 31 march and prediction window: 31 march 2017-30 sep 2017
+#2
+#dfcc_df11=dfcc_df0317[(dfcc_df0317['DATE_OF_COMMENCEMENT1'] >= '2017-04-01') | (dfcc_df0317['DATE_OF_COMMENCEMENT1'].isnull())]#customer base who have no AIA product till march,2017
+dfcc_dfP2=dfcc_df0917.loc[(dfcc_df0917["DATE_OF_COMMENCEMENT1"]>= '2017-04-01') & (dfcc_df0917["DATE_OF_COMMENCEMENT1"]<= '2017-09-30') |(dfcc_df0317['DATE_OF_COMMENCEMENT1'].isnull())]
+dfcc_dfO2=dfcc_df0317.drop(dfcc_df0317[dfcc_df0317['DATE_OF_COMMENCEMENT1']<'2017-04-01'].index)
+Y2018=dfcc_dfP2[["CUSTOMER_CODE","PRODUCT_1_CODE"]].copy()
+
+#3
+dfcc_dfO2=dfcc_dfO2[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3",
+"AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1"
+,"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER",
+"NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+
+#4
+#customer base created
+dfcc_df2=dfcc_dfO2.join(Y2018.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE") #will give all values for left dataset
+
+#Model3:Observation window : 31 march,2017 to 30 Sep,2017 and prediction window: after 1 oct,2017 
+
+dfcc_dfP3=dfcc_df0318.loc[(dfcc_df0318["DATE_OF_COMMENCEMENT1"]>= '2017-09-30') |(dfcc_df0318['DATE_OF_COMMENCEMENT1'].isnull())]
+dfcc_dfO3=dfcc_df0917.drop(dfcc_df0917[dfcc_df0917['DATE_OF_COMMENCEMENT1']<'2017-09-30'].index)
+Y2018=dfcc_dfP3[["CUSTOMER_CODE","PRODUCT_1_CODE"]].copy()
+
+dfcc_dfO3=dfcc_dfO3[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3",
+"AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1"
+,"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER",
+"NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+
+#4
+#customer base created
+dfcc_df3=dfcc_dfO3.join(Y2018.set_index("CUSTOMER_CODE"),on="CUSTOMER_CODE") #will give all values for left dataset
+
+
+frames=[dfcc_df2,dfcc_df3]
+dfcc_df=pd.concat(frames,ignore_index=True)
+
+#5
+#encoding the target varaible
+dfcc_df["PRODUCT_1_CODE"].fillna('NTH',inplace = True)
+#encode dict
+product_1_encoded={"SBC": 1,"SBA": 1,"SBD": 1,"SBB": 1,"SBF": 1,"SBE": 1,"PPG": 1,"EPA": 1,
+"EPB": 1,"LTP": 1,"HPA": 1,"PPC": 1,"PPD": 1,"PSA": 1,"PSB": 1,"PPH": 1,"NTH": 0}
+
+#creating target variable(new column) and filling with product_1_encoded values
+dfcc_df['target'] = dfcc_df['PRODUCT_1_CODE'].apply(lambda x: product_1_encoded[x])
+
+
+#6 replacng by mean in the continuous variables
+
+#dfcc_df.apply(lambda x: sum(x.isnull()),axis=0)
+continuousCol=list((dfcc_df.loc[:, (dfcc_df.dtypes==np.float64)]).columns)
+continuousCol=["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","NO_FD_ACCT",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+
+dfcc_df[continuousCol].apply(lambda x: x.fillna(x.mean()),axis=0)
+
+
+
+#7 
+dfcc_df["NO_OTC_C_AMT_TRANS_LM1"].fillna(0,inplace=True)
+dfcc_df["CUSTOMER_TENURE"].fillna(0,inplace=True)
+
+#8 replacing by mode of the value
+for column in ["CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","target"]:
+    dfcc_df[column].fillna(dfcc_df[column].mode()[0], inplace=True)
+
+#9 log trasformation with very high value
+to_log=["NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+dfcc_df[to_log].applymap(lambda x: np.log(x+1))
+
+#step6
+#part of binning
+labels=[0,1,2,3,4,5,6,7,8,9]
+
+for col in ["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6",
+"NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1",
+"AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6",
+"NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1",
+"AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6",
+"AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6",
+"AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","NO_FD_ACCT","NO_FD_ACCT_MATURED_IN_M3"]:
+    dfcc_df[col]=pd.cut(dfcc_df[col],bins=10,labels=labels)
+    
+    
+#step 7
+#label encoding for categorical vars
+from sklearn import preprocessing
+for col in ["CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1",
+"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]:
+    le = preprocessing.LabelEncoder()
+    le.fit(dfcc_df[col])
+    le.classes_
+    dfcc_df[col]=le.transform(dfcc_df[col])
+    
+    
+dfcc_df=dfcc_df[["CUSTOMER_CODE","AGE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1",
+"AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3",
+"AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1",
+"AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3",
+"AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3",
+"AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12","target"]].copy()
+
+
+#step 8
+#Balancing dataset
+import random
+random.seed(32)
+#target 0 is for those we do not have product information and target =1 for those we have info
+target_0_total = dfcc_df[dfcc_df['target'] == 0].index#non responders
+target_1 = dfcc_df[dfcc_df['target'] == 1].index#responders
+sample_size = sum(dfcc_df['target'] == 1)*4  # Equivalent to len(data[data.Healthy == 0])
+
+
+target_0 = np.random.choice(target_0_total, sample_size, replace=False)
+
+df0=dfcc_df.loc[target_0]
+df1=dfcc_df.loc[target_1]
+df=[df0,df1]
+dfcc_df1=pd.concat(df)
+
+#shuffle dataset
+dfcc_df1 = dfcc_df1.sample(frac=1).reset_index(drop=True)
+
+#STEp 9 Round 1
+df=dfcc_df1[["CUSTOMER_CODE","AGE","GENDER","RACE","CITIZENSHIP","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","AVG_M_OTC_TRANS_P1_3VSP4_6","AVG_M_OTC_C_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","AVG_M_NON_OTC_C_TRANS_LM6",
+"NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_OB_TRANS_P1_3VSP4_6","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM6","NO_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+y=dfcc_df1[["CUSTOMER_CODE","target"]].copy()
+
+
+#Step11a Random Forest on balanced dataset
+#step10a
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict
+#splitting dataset into training and test dataset
+x_train, x_test, y_train, y_test = train_test_split(df, y['target'], test_size=0, random_state=20)
+
+import random
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import linear_model, metrics
+from sklearn.metrics import roc_auc_score
+from sklearn import linear_model, metrics
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_auc_score
+rf = RandomForestClassifier(n_estimators=32,bootstrap=False,min_samples_leaf=32,min_samples_split=70,random_state=113)
+
+rf.fit(x_train, y_train)
+
+filename = 'jobLib.py'
+pickle.dump(rf, open(filename, 'wb'))
+
+###creating a notepad .py file in which we have the model to run and then importing it as an object
+#includes fitting the data
+import TrainingData as Tr
+
+#Importing all the packages
+%matplotlib inline
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import csv
+from datetime import datetime
+from sklearn import preprocessing
+import random
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn import linear_model, metrics
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_predict
+from sklearn.feature_selection import RFE
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+
+dir = 'C:\\Users\\Public\\Documents\\DFCC_finalData\\Data17_18\\'
+InputFile="AIA_DATA_File_13_06_2018.dsv"
+ScoringFile= pd.read_csv(dir+InputFile,sep="|", converters={'CUSTOMER_CODE': lambda x: str(x)},low_memory=False)
+
+#encoding the target varaible
+ScoringFile["PRODUCT_1_CODE"].fillna('NTH',inplace = True)
+#encode dict
+product_1_encoded={"SBC": 1,"SBA": 1,"SBD": 1,"SBB": 1,"SBF": 1,"SBE": 1,"PPG": 1,"EPA": 1,
+"EPB": 1,"LTP": 1,"HPA": 1,"PPC": 1,"PPD": 1,"PSA": 1,"PSB": 1,"PPH": 1,"NTH": 0}
+
+#creating target variable(new column) and filling with product_1_encoded values
+ScoringFile['target'] = ScoringFile['PRODUCT_1_CODE'].apply(lambda x: product_1_encoded[x])
+
+#6 replacng by mean in the continuous variables
+
+continuousCol=list((ScoringFile.loc[:, (ScoringFile.dtypes==np.float64)]).columns)
+continuousCol=["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6","NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1","AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1","AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6","AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","NO_FD_ACCT",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","NO_FD_ACCT_MATURED_IN_M3","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+
+ScoringFile[continuousCol].apply(lambda x: x.fillna(x.mean()),axis=0)
+
+#7 
+ScoringFile["NO_OTC_C_AMT_TRANS_LM1"].fillna(0,inplace=True)
+ScoringFile["CUSTOMER_TENURE"].fillna(0,inplace=True)
+
+#8 replacing by mode of the value
+
+for column in ["CUSTOMER_TENURE","CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","target"]:
+    ScoringFile[column].fillna(ScoringFile[column].mode()[0], inplace=True)
+#9 log trasformation with very high value
+to_log=["NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1","AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6",
+"TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6","AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6",
+"TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]
+
+
+ScoringFile[to_log].applymap(lambda x: np.log(x+1))
+
+#step6
+#part of binning
+
+labels=[0,1,2,3,4,5,6,7,8,9]
+
+for col in ["AGE","CUSTOMER_TENURE","NO_OTC_TRANS_LM1","AVG_M_OTC_TRANS_LM3","AVG_M_OTC_TRANS_LM6","AVG_M_OTC_TRANS_P1_3VSP4_6",
+"NO_OTC_C_TRANS_LM1","AVG_M_OTC_C_TRANS_LM3","AVG_M_OTC_C_TRANS_LM6","NO_OTC_D_TRANS_LM1",
+"AVG_M_OTC_D_TRANS_LM3","AVG_M_OTC_D_TRANS_LM6","NO_NON_OTC_TRANS_LM1","AVG_M_NON_OTC_TRANS_LM3","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6",
+"NO_NON_OTC_C_TRANS_LM1","AVG_M_NON_OTC_C_TRANS_LM3","AVG_M_NON_OTC_C_TRANS_LM6","NO_NON_OTC_D_TRANS_LM1",
+"AVG_M_NON_OTC_D_TRANS_LM3","AVG_M_NON_OTC_D_TRANS_LM6","NO_OB_TRANS_LM1","AVG_M_OB_TRANS_LM3","AVG_M_OB_TRANS_LM6",
+"AVG_M_OB_TRANS_P1_3VSP4_6","NO_ATM_TRANS_LM1","AVG_M_ATM_TRANS_LM3","AVG_M_ATM_TRANS_LM6",
+"AVG_M_ATM_TRANS_P1_3VSP4_6","NO_SA_ACCT","AVG_SA_P1_3_VS_P4_6_MTHS","NO_CA_ACCT","NO_FD_ACCT","NO_FD_ACCT_MATURED_IN_M3"]:
+
+    ScoringFile[col]=pd.cut(ScoringFile[col],bins=10,labels=labels)
+    
+#step 7
+#label encoding for categorical vars
+from sklearn import preprocessing
+for col in ["CITIZENSHIP","GENDER","RACE","STATE","MARITALSTATUS","INACTIVE_INDICATOR","COB_CUS_IND","ATM_CUS_IND","OTC_CUS_IND","NON_OTC_CUS_IND","SA_INDICATER","CA_INDICATER","FD_INDICATER","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","NO_OTC_D_AMT_TRANS_LM1",
+"AVG_M_OTC_D_AMT_TRANS_LM3","AVG_M_OTC_D_AMT_TRANS_LM6","NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_C_AMT_TRANS_LM6","NO_NON_OTC_D_AMT_TRANS_LM1",
+"AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM6","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM3","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM3","AVG_FD_AMT_TRAN_AMT_LM6","AVG_FD_AMT_TRAN_AMT_LM12","AMT_OF_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM3","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]:
+    le = preprocessing.LabelEncoder()
+    le.fit(ScoringFile[col])
+    le.classes_
+    ScoringFile[col]=le.transform(ScoringFile[col])
+    
+    
+#STEp 9 complete data
+
+dfj18=ScoringFile[["CUSTOMER_CODE","AGE","GENDER","RACE","CITIZENSHIP","STATE","MARITALSTATUS","INACTIVE_INDICATOR","CUSTOMER_TENURE","ATM_CUS_IND","OTC_CUS_IND",
+"NON_OTC_CUS_IND","AVG_M_OTC_TRANS_P1_3VSP4_6","AVG_M_OTC_C_TRANS_LM6","NO_OTC_C_AMT_TRANS_LM1","AVG_M_OTC_C_AMT_TRANS_LM3","AVG_M_OTC_C_AMT_TRANS_LM6","AVG_M_NON_OTC_TRANS_LM6","AVG_M_NON_OTC_TRANS_P1_3VSP4_6","AVG_M_NON_OTC_C_TRANS_LM6",
+"NO_NON_OTC_C_AMT_TRANS_LM1","AVG_M_NON_OTC_C_AMT_TRANS_LM3","AVG_M_NON_OTC_D_AMT_TRANS_LM3","AVG_M_OB_TRANS_P1_3VSP4_6","AVG_M_ATM_TRANS_LM6","AVG_M_ATM_TRANS_P1_3VSP4_6","SA_INDICATER","NO_SA_ACCT","TOT_SA_AMT_TRAN_AMT_LM1","AVG_SA_AMT_TRAN_AMT_LM6",
+"AVG_SA_AMT_TRAN_AMT_LM12","CA_INDICATER","NO_CA_ACCT","TOT_CA_AMT_TRAN_AMT_LM1","AVG_CA_AMT_TRAN_AMT_LM3","AVG_CA_AMT_TRAN_AMT_LM6","FD_INDICATER","NO_FD_ACCT","TOT_FD_AMT_TRAN_AMT_LM1","AVG_FD_AMT_TRAN_AMT_LM6","NO_FD_ACCT_MATURED_IN_M3","AVG_FCY_AMT_TRAN_AMT_LM1","AVG_FCY_AMT_TRAN_AMT_LM6","AVG_FCY_AMT_TRAN_AMT_LM12"]].copy()
+
+yj18=ScoringFile[["CUSTOMER_CODE","target"]].copy()
+
+#Scoring on June dataset 2018 using RF
+random.seed(36)
+
+y_pred = Tr.rf.predict(dfj18)
+prob= Tr.rf.predict_proba(dfj18)
+prob=pd.DataFrame(prob)
+prob.columns=['Pred_0','Pred_1']
+roc1=roc_auc_score(yj18['target'], prob["Pred_1"], sample_weight=None)
+
+accuracy=metrics.accuracy_score(y_pred,yj18['target'])
+print("accuracy : %s" %(accuracy))
+print("roc:%s" %(roc1))
+
+#KS calculation on june data logistic
+result = pd.concat([yj18, prob], axis=1, join_axes=[yj18.index])
+result=result[["CUSTOMER_CODE","target","Pred_1"]].copy()
+result['decile'] = pd.qcut(result["Pred_1"].rank(method='first',ascending=False), 10,labels=False)
+ 
+out1=result[["CUSTOMER_CODE",'Pred_1']].copy()
+out1=out1.sort_values(by='Pred_1',ascending=False)
+out1["CUSTOMER_CODE"] = out1["CUSTOMER_CODE"].apply('="{}"'.format)
+out1=out1.round(decimals=2)
+out1.columns=['CUSTOMER_CODE','Propensity_score']
+
+import datetime as dt
+today = dt.datetime.today().strftime('%m%d%Y')  
+output_file = 'Output_{}.csv'.format(today)
+out1.to_csv(dir+output_file,index=False)
+
+##sort values pandas
+VP_df['income'].sort_values(ascending=[False])
+
+#box cox transformation
+from scipy import stats
+incomeT=stats.boxcox(VP_df['income'])[0]
+plt.hist(incomeT, bins=100, color='red')
+plt.show()
+
+secondary axis
+https://stackoverflow.com/questions/5484922/secondary-axis-with-twinx-how-to-add-to-legend
+
+
+Kmean clustering
+https://www.datascience.com/blog/k-means-clustering
+https://www.kaggle.com/dhanyajothimani/basic-visualization-and-clustering-in-python
+
+
+STATS model:
+https://stats.stackexchange.com/questions/203740/logistic-regression-scikit-learn-vs-statsmodels/301970
+from patsy import dmatrices
+from sklearn.linear_model import LogisticRegression
+import statsmodels.discrete.discrete_model as sm
+
+y, X = dmatrices('target ~ cus_tenure + avg_number_credit_otc_p3m + C(gender)' , VP_df, return_type = 'dataframe')
+logit = sm.Logit(y, X)
+logitModel=logit.fit()
+logitModel.params
+logitModel.summary()
+
+
+
+------------------------------------------
+
+'''plt.figure(1)
+plt.title('Feature Importances')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), features[indices])
+plt.xlabel('Relative Importance')'''
+
+
+https://stackabuse.com/linear-regression-in-python-with-scikit-learn/
+
+
+file=pd.crosstab(out1["Branch"],out1["Decile"],margins=True)
+dir = 'C:\\Users\\Public\\Documents\\Vietnam\\'
+file.to_csv(dir+'crossTab.csv')
+
+
+RFM
+https://www.putler.com/rfm-analysis/
+
+Standardization
+http://www.surveyanalysis.org/wiki/Variable_Standardization
+
+-------------------------------------------
+Logistic plot Roc
+#only with Cust_tenure
+df=VP_df1[['cus_tenure','total_amount_credit_otc_p1m','total_number_casa','total_number_credit_otc_p1m']].copy()
+y=VP_df1[['id','target']].copy()
+
+#logistic
+#splitting dataset into training and test dataset
+x_train, x_test, y_train, y_test = train_test_split(df, y['target'], test_size=0, random_state=20)
+logisticRegr = LogisticRegression()
+logisticRegr.fit(x_train, y_train)
+
+#logistic balanced
+random.seed(33)
+y_pred = logisticRegr.predict(x_train)#predicted target
+prob=logisticRegr.predict_proba(x_train) #predicted probabilities
+prob=pd.DataFrame(prob)
+prob.columns=['Pred_0','Pred_1']
+roc=roc_auc_score(y_train, prob["Pred_1"], sample_weight=None)
+from sklearn.metrics import confusion_matrix
+confusion_matrix = confusion_matrix(y_train, y_pred)
+print('Accuracy of logistic regression classifier on test set: {:.2f}'.format(logisticRegr.score(x_train, y_train)))
+print(classification_report(y_train, y_pred))
+print("roc:%s" %(roc))
+
+fpr, tpr, threshold = metrics.roc_curve(y_train,  prob["Pred_1"])
+
+#metrics.roc_auc_score(y_train, )
+
+# calculate AUC and create ROC curve
+roc_auc = metrics.auc(fpr,tpr)
+roc_auc
+
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+------------------------------------------
+reading 
+from nltk.stem import PorterStemmer
+from nltk.tokenize import sent_tokenize, word_tokenize
+
+words = ["game","gaming","gamed","games"]
+ps = PorterStemmer()
+ 
+for word in words:
+    print(ps.stem(word))
+-------------------------------------------
+Parameter tuning for RF
+http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html
+https://github.com/WillKoehrsen/Machine-Learning-Projects/blob/master/Random%20Forest%20Tutorial.ipynb
+
+https://seaborn.pydata.org/tutorial/categorical.html
+
+
+============================Label encoding===============================
+mapper = DataFrameMapper([
+      ('teacher_prefix', LabelBinarizer()),
+      ('school_state', LabelBinarizer()),
+      ('project_grade_category',   LabelBinarizer()),
+      ('year_submitted', LabelBinarizer()),
+      ('day_of_week', LabelBinarizer()),      
+      ('day_of_year', LabelBinarizer()),
+      (['teacher_number_of_previously_posted_projects'], StandardScaler()),
+      (['tpsum'], StandardScaler()),
+      (['tpmin'], StandardScaler()),
+      (['tpmax'], StandardScaler()),
+      (['tpmean'],StandardScaler())
+], df_out=True)
+
+
+# Generate numeric and categorical training features
+x_train = np.round(mapper.fit_transform(train_features_engineered.copy()), 2).values
+
+
+https://stackoverflow.com/questions/39283339/how-to-understand-axis-0-or-1-in-pandas-python
+Use axis=0 to apply a method down each column, or to the row labels (the index).
+Use axis=1 to apply a method across each row, or to the column labels.
